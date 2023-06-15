@@ -144,6 +144,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			if m.focused == news {
 				selectedItem := m.lists[news].SelectedItem()
+
+				if selectedItem == nil {
+					return m, nil
+				}
+
 				selectedNews := selectedItem.(Item)
 				url := selectedNews.desc
 
