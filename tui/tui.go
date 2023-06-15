@@ -2,39 +2,53 @@ package tui
 
 import (
 	"fmt"
+	"log"
 	"os"
 
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/moaqz/news/tui/entryui"
-	"github.com/moaqz/news/tui/newsui"
-	"github.com/moaqz/news/tui/shared"
+	"github.com/charmbracelet/lipgloss"
 )
 
-type sessionState int
+type status int
 
 const (
-	entryView sessionState = iota
-	newsView
+	lang status = iota
+	news
 )
 
-type MainModel struct {
-	state sessionState
-	entry tea.Model
-	news  tea.Model
+var (
+	divisor      = 2
+	columnStyle  = lipgloss.NewStyle().Padding(1, 2).Border(lipgloss.HiddenBorder())
+	focusedStyle = lipgloss.NewStyle().Padding(1, 2).Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("62"))
+)
+
+type Model struct {
+	lists    []list.Model
+	quitting bool
+	focused  status
 }
 
-// New initialize the main model for your program
-func NewMainModel() MainModel {
-	return MainModel{
-		state: sessionState(0),
-		entry: entryui.NewEntryModel(),
-		news:  newsui.NewNewsModel(),
+func NewModel() Model {
+	// Init lang list
+	langList := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
+	langList.Title = "Languages"
+	langList.SetItems(langOptions)
+	langList.SetShowHelp(false)
+
+	// Init news list
+	newsList := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
+	newsList.Title = "News"
+	newsList.SetShowHelp(false)
+
+	return Model{
+		lists: []list.Model{langList, newsList},
 	}
 }
 
 // StartTea the entry point for the UI. Initializes the model.
 func StartTea() {
-	m := NewMainModel()
+	m := NewModel()
 
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
@@ -43,52 +57,126 @@ func StartTea() {
 	}
 }
 
-// Init run any intial IO on program start
-func (m MainModel) Init() tea.Cmd {
+func (m Model) Init() tea.Cmd {
 	return nil
 }
 
-// Update handle IO and commands
-func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-	var cmds []tea.Cmd
+func (m *Model) Next() {
+	if m.focused == lang {
+		m.focused = news
+	} else {
+		m.focused = lang
+	}
+}
 
+func (m *Model) Prev() {
+	if m.focused == lang {
+		m.focused = news
+	} else {
+		m.focused--
+	}
+}
+
+func (m Model) FetchNews(lang string) {
+	var (
+		err      error
+		newsList []list.Item
+	)
+
+	switch lang {
+	case "Go":
+		newsList, err = getGolangNews()
+
+	case "Python":
+		newsList, err = getPythonNews()
+
+	case "JavaScript":
+		newsList, err = getJavaScriptNews()
+	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	m.lists[news].SetItems(newsList)
+	m.lists[news].Title = fmt.Sprintf("%s News", lang)
+}
+
+func OpenUrl(url string) {
+	log.Fatal("not implemented")
+}
+
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		shared.WindowSize = msg
+		columnWidth := msg.Width / divisor
+		columnHeight := msg.Height - divisor
+
+		columnStyle.Width(columnWidth)
+		focusedStyle.Width(columnWidth)
+		columnStyle.Height(columnHeight)
+		focusedStyle.Height(columnHeight)
+
+		for i, list := range m.lists {
+			list.SetSize(msg.Width/divisor, msg.Height/divisor)
+			m.lists[i], _ = list.Update(msg)
+		}
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
+			m.quitting = true
 			return m, tea.Quit
+		case "right", "l":
+			m.Next()
+		case "left", "h":
+			m.Prev()
+		case "enter":
+			if m.focused == lang {
+				selectedItem := m.lists[lang].SelectedItem()
+				selectedLang := selectedItem.(Item)
+				m.FetchNews(selectedLang.title)
+
+				m.Next()
+
+				return m, nil
+			}
+
+			if m.focused == news {
+				selectedItem := m.lists[news].SelectedItem()
+				selectedNews := selectedItem.(Item)
+				url := selectedNews.desc
+
+				OpenUrl(url)
+			}
 		}
 	}
 
-	switch m.state {
-	case entryView:
-		newEntry, newCmd := m.entry.Update(msg)
-		entryModel, ok := newEntry.(entryui.EntryModel)
-
-		if !ok {
-			panic("could not perform assertion on entryui model")
-		}
-
-		m.entry = entryModel
-		cmd = newCmd
-	case newsView:
-		// TODO: implement news View
-		panic("Not implemented")
-	}
-
-	cmds = append(cmds, cmd)
-	return m, tea.Batch(cmds...)
+	var cmd tea.Cmd
+	m.lists[m.focused], cmd = m.lists[m.focused].Update(msg)
+	return m, cmd
 }
 
-// View return the text UI to be output to the terminal
-func (m MainModel) View() string {
-	switch m.state {
-	case newsView:
-		return m.news.View()
+func (m Model) View() string {
+	if m.quitting {
+		return ""
+	}
+
+	langView := m.lists[lang].View()
+	newsView := m.lists[news].View()
+
+	switch m.focused {
+	case news:
+		return lipgloss.JoinHorizontal(
+			lipgloss.Left,
+			columnStyle.Render(langView),
+			focusedStyle.Render(newsView),
+		)
 	default:
-		return m.entry.View()
+		return lipgloss.JoinHorizontal(
+			lipgloss.Left,
+			focusedStyle.Render(langView),
+			columnStyle.Render(newsView),
+		)
 	}
 }
