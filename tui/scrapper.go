@@ -7,8 +7,15 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 )
 
-func getGolangNews() ([]list.Item, error) {
-	r, err := http.Get("https://golangweekly.com/latest")
+var newsCache map[string][]list.Item
+
+func getNews(url string, selector string) ([]list.Item, error) {
+	// Check if the result is already in the cache
+	if news, ok := newsCache[url]; ok {
+		return news, nil
+	}
+
+	r, err := http.Get(url)
 	if err != nil {
 		return []list.Item{}, err
 	}
@@ -24,67 +31,27 @@ func getGolangNews() ([]list.Item, error) {
 	}
 
 	var news []list.Item
-
-	doc.Find(".mainlink > a").Each(func(i int, s *goquery.Selection) {
+	doc.Find(selector).Each(func(i int, s *goquery.Selection) {
 		title := s.Text()
 		link, _ := s.Attr("href")
 
 		news = append(news, NewItem(title, link))
 	})
 
+	// Store the result in the cache
+	newsCache[url] = news
+
 	return news, nil
+}
+
+func getGolangNews() ([]list.Item, error) {
+	return getNews("https://golangweekly.com/latest", ".mainlink > a")
 }
 
 func getPythonNews() ([]list.Item, error) {
-	r, err := http.Get("https://pycoders.com/latest")
-	if err != nil {
-		return []list.Item{}, err
-	}
-
-	defer r.Body.Close()
-	if r.StatusCode != 200 {
-		return []list.Item{}, err
-	}
-
-	doc, err := goquery.NewDocumentFromReader(r.Body)
-	if err != nil {
-		return []list.Item{}, err
-	}
-
-	var news []list.Item
-	doc.Find(".mcnTextContent > span > a").Each(func(i int, s *goquery.Selection) {
-		title := s.Text()
-		link, _ := s.Attr("href")
-
-		news = append(news, NewItem(title, link))
-	})
-
-	return news, nil
+	return getNews("https://pycoders.com/latest", ".mcnTextContent > span > a")
 }
 
 func getJavaScriptNews() ([]list.Item, error) {
-	r, err := http.Get("https://javascriptweekly.com/latest")
-	if err != nil {
-		return []list.Item{}, err
-	}
-
-	defer r.Body.Close()
-	if r.StatusCode != 200 {
-		return []list.Item{}, err
-	}
-
-	doc, err := goquery.NewDocumentFromReader(r.Body)
-	if err != nil {
-		return []list.Item{}, err
-	}
-
-	var news []list.Item
-	doc.Find(".mainlink > a").Each(func(i int, s *goquery.Selection) {
-		title := s.Text()
-		link, _ := s.Attr("href")
-
-		news = append(news, NewItem(title, link))
-	})
-
-	return news, nil
+	return getNews("https://javascriptweekly.com/latest", ".mainlink > a")
 }
