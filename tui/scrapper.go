@@ -35,7 +35,7 @@ func getNews(url string, selector string) ([]list.Item, error) {
 		title := s.Text()
 		link, _ := s.Attr("href")
 
-		news = append(news, NewItem(title, link))
+		news = append(news, News{Title: title, Url: link})
 	})
 
 	// Store the result in the cache
@@ -46,10 +46,6 @@ func getNews(url string, selector string) ([]list.Item, error) {
 
 func getGolangNews() ([]list.Item, error) {
 	return getNews("https://golangweekly.com/latest", ".mainlink > a")
-}
-
-func getPythonNews() ([]list.Item, error) {
-	return getNews("https://pycoders.com/latest", ".mcnTextContent > span > a")
 }
 
 func getJavaScriptNews() ([]list.Item, error) {

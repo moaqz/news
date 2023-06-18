@@ -5,45 +5,162 @@ import (
 	"log"
 	"os"
 
+	"github.com/moaqz/news/ui"
+
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-type status int
+type tab int
 
 const (
-	lang status = iota
-	news
-)
-
-var (
-	divisor      = 2
-	columnStyle  = lipgloss.NewStyle().Padding(1, 2).Border(lipgloss.HiddenBorder())
-	focusedStyle = lipgloss.NewStyle().Padding(1, 2).Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("62"))
+	languageTab tab = iota
+	newsTab
 )
 
 type Model struct {
-	lists    []list.Model
-	quitting bool
-	focused  status
+	width        int
+	height       int
+	keys         KeyMap
+	help         help.Model
+	newsList     list.Model
+	languageList list.Model
+	quitting     bool
+	tab          tab
 }
 
 func NewModel() Model {
-	// Init lang list
-	langList := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
-	langList.Title = "Languages"
-	langList.SetItems(langOptions)
-	langList.SetShowHelp(false)
-
-	// Init news list
-	newsList := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
-	newsList.Title = "News"
-	newsList.SetShowHelp(false)
-
 	return Model{
-		lists: []list.Model{langList, newsList},
+		help:         help.New(),
+		keys:         DefaultKeyMap,
+		newsList:     NewNewsList(),
+		languageList: NewLanguageList(),
 	}
+}
+
+func (m Model) Init() tea.Cmd {
+	return nil
+}
+
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case updateNewsMsg:
+		if msg.err != nil {
+			log.Fatal(msg.err)
+		}
+
+		m.newsList.Title = msg.lang + " News"
+		m.newsList.SetItems(msg.news)
+
+	case tea.WindowSizeMsg:
+		m.height = msg.Height - 2
+		m.width = msg.Width
+
+		m.newsList.SetHeight(m.height)
+		m.languageList.SetHeight(m.height)
+
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, m.keys.Quit):
+			m.quitting = true
+			return m, tea.Quit
+		case key.Matches(msg, m.keys.NextTab):
+			if m.newsList.SettingFilter() {
+				return m, nil
+			}
+
+			m.NextTab()
+		case key.Matches(msg, m.keys.PreviousTab):
+			if m.newsList.SettingFilter() {
+				return m, nil
+			}
+
+			m.PreviousTab()
+		case key.Matches(msg, m.keys.ToggleHelp):
+			m.help.ShowAll = !m.help.ShowAll
+
+			var newHeight int
+			if m.help.ShowAll {
+				newHeight = m.height - 3
+			} else {
+				newHeight = m.height
+			}
+
+			m.newsList.SetHeight(newHeight)
+			m.languageList.SetHeight(newHeight)
+		case key.Matches(msg, m.keys.Search):
+			m.tab = newsTab
+		}
+
+		switch msg.String() {
+		case "enter":
+			if m.tab == languageTab {
+				selectedLang := m.languageList.SelectedItem().(language)
+				return m, updateNews(string(selectedLang))
+			}
+
+			if m.tab == newsTab {
+				selectedItem := m.newsList.SelectedItem()
+
+				if selectedItem == nil {
+					return m, nil
+				}
+			}
+		}
+	}
+
+	cmd := m.updateActiveTab(msg)
+	return m, cmd
+}
+
+// updateActiveTab updates the currently active tab.
+func (m *Model) updateActiveTab(msg tea.Msg) tea.Cmd {
+	var cmds []tea.Cmd
+	var cmd tea.Cmd
+
+	switch m.tab {
+	case newsTab:
+		m.newsList, cmd = m.newsList.Update(msg)
+		cmds = append(cmds, cmd)
+
+		m.newsList.Styles.Title = ui.FocusedTitle
+		m.newsList.Styles.TitleBar = ui.FocusedTitleBar.Width(newsListWidth)
+		m.newsList.FilterInput.PromptStyle = ui.Prompt
+		m.newsList.FilterInput.Cursor.Style = ui.Cursor
+
+		m.languageList.Styles.Title = ui.UnFocusedTitle
+		m.languageList.Styles.TitleBar = ui.UnFocusedTitleBar.Width(languageListWidth)
+	case languageTab:
+		m.languageList.Styles.Title = ui.FocusedTitle
+		m.languageList.Styles.TitleBar = ui.FocusedTitleBar.Width(languageListWidth)
+
+		m.newsList.Styles.Title = ui.UnFocusedTitle
+		m.newsList.Styles.TitleBar = ui.UnFocusedTitleBar.Width(newsListWidth)
+
+		m.languageList, cmd = m.languageList.Update(msg)
+		cmds = append(cmds, cmd)
+	}
+
+	return tea.Batch(cmds...)
+}
+
+func (m Model) View() string {
+	if m.quitting {
+		return ""
+	}
+
+	return lipgloss.JoinVertical(
+		lipgloss.Top,
+		lipgloss.JoinHorizontal(
+			lipgloss.Left,
+			m.languageList.View(),
+			m.newsList.View(),
+		),
+		ui.Margin.Render(m.help.View(m.keys)),
+	)
 }
 
 // StartTea the entry point for the UI. Initializes the model.
@@ -58,131 +175,42 @@ func StartTea() {
 	}
 }
 
-func (m Model) Init() tea.Cmd {
-	return nil
-}
+const maxTabs = 2
 
-func (m *Model) Next() {
-	if m.focused == lang {
-		m.focused = news
-	} else {
-		m.focused = lang
+func (m *Model) NextTab() {
+	m.tab++
+
+	if m.tab > maxTabs {
+		m.tab = 0
 	}
 }
 
-func (m *Model) Prev() {
-	if m.focused == lang {
-		m.focused = news
-	} else {
-		m.focused--
+func (m *Model) PreviousTab() {
+	m.tab--
+
+	if m.tab < 0 {
+		m.tab = maxTabs - 1
 	}
 }
 
-func (m Model) FetchNews(lang string) {
-	var (
-		err      error
-		newsList []list.Item
-	)
+type updateNewsMsg struct {
+	lang string
+	news []list.Item
+	err  error
+}
+
+func updateNews(lang string) tea.Cmd {
+	var msg updateNewsMsg
 
 	switch lang {
 	case "Go":
-		newsList, err = getGolangNews()
-
-	case "Python":
-		newsList, err = getPythonNews()
+		msg.news, msg.err = getGolangNews()
 
 	case "JavaScript":
-		newsList, err = getJavaScriptNews()
+		msg.news, msg.err = getJavaScriptNews()
 	}
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	msg.lang = lang
 
-	m.lists[news].SetItems(newsList)
-	m.lists[news].Title = fmt.Sprintf("%s News", lang)
-}
-
-func OpenUrl(url string) {
-	log.Fatal("not implemented")
-}
-
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		columnWidth := msg.Width / divisor
-		columnHeight := msg.Height - divisor
-
-		columnStyle.Width(columnWidth)
-		focusedStyle.Width(columnWidth)
-		columnStyle.Height(columnHeight)
-		focusedStyle.Height(columnHeight)
-
-		for i, list := range m.lists {
-			list.SetSize(msg.Width/divisor, msg.Height/divisor)
-			m.lists[i], _ = list.Update(msg)
-		}
-
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			m.quitting = true
-			return m, tea.Quit
-		case "right", "l":
-			m.Next()
-		case "left", "h":
-			m.Prev()
-		case "enter":
-			if m.focused == lang {
-				selectedItem := m.lists[lang].SelectedItem()
-				selectedLang := selectedItem.(Item)
-				m.FetchNews(selectedLang.title)
-
-				m.Next()
-
-				return m, nil
-			}
-
-			if m.focused == news {
-				selectedItem := m.lists[news].SelectedItem()
-
-				if selectedItem == nil {
-					return m, nil
-				}
-
-				selectedNews := selectedItem.(Item)
-				url := selectedNews.desc
-
-				OpenUrl(url)
-			}
-		}
-	}
-
-	var cmd tea.Cmd
-	m.lists[m.focused], cmd = m.lists[m.focused].Update(msg)
-	return m, cmd
-}
-
-func (m Model) View() string {
-	if m.quitting {
-		return ""
-	}
-
-	langView := m.lists[lang].View()
-	newsView := m.lists[news].View()
-
-	switch m.focused {
-	case news:
-		return lipgloss.JoinHorizontal(
-			lipgloss.Left,
-			columnStyle.Render(langView),
-			focusedStyle.Render(newsView),
-		)
-	default:
-		return lipgloss.JoinHorizontal(
-			lipgloss.Left,
-			focusedStyle.Render(langView),
-			columnStyle.Render(newsView),
-		)
-	}
+	return func() tea.Msg { return msg }
 }
