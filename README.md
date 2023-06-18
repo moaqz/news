@@ -13,8 +13,8 @@
 | Action                              | Key                            |
 | :---------------------------------- | :----------------------------- |
 | Copy selected news URL to clipboard | <kbd>c</kbd>                   |
-| Move to down in a list              | <kbd>j</kbd>                   |
-| Move to up in a list                | <kbd>k</kbd>                   |
+| Move down in a list              | <kbd>j</kbd>                   |
+| Move up in a list                | <kbd>k</kbd>                   |
 | Move to the top of a list           | <kbd>g</kbd>                   |
 | Move to the bottom of a list        | <kbd>G</kbd>                   |
 | Move to next tab                    | <kbd>tab</kbd>                 |
