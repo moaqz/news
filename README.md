@@ -24,6 +24,16 @@
 | Toggle help                         | <kbd>?</kbd>                   |
 | Quit application                    | <kbd>q</kbd> <kbd>ctrl+c</kbd> |
 
+## ⚡ Installation
+
+Download a pre-compiled binary or package from the releases page.
+
+Or install it with go:
+
+```bash
+$ go install github.com/moaqz/news@latest
+```
+
 ## ✅ Todo
 
 - [x] Implement copy to clipboard functionality.
