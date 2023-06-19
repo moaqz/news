@@ -3,6 +3,8 @@ package tui
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"runtime"
 
 	"github.com/atotto/clipboard"
 	"github.com/moaqz/news/ui"
@@ -118,10 +120,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			if m.tab == newsTab {
-				selectedItem := m.newsList.SelectedItem()
-
-				if selectedItem == nil {
+				item := m.newsList.SelectedItem()
+				if item == nil {
 					return m, nil
+				}
+
+				url := item.(News).Url
+				if err := openBrowser(url); err != nil {
+					m.newsList.NewStatusMessage(ui.FailedMessage.Render("❌ Failed to open url"))
 				}
 			}
 		}
@@ -214,4 +220,25 @@ func languageSelection(lang string) tea.Cmd {
 	return func() tea.Msg {
 		return languageSelectionMsg{lang: lang}
 	}
+}
+
+func openBrowser(targetURL string) error {
+	var err error
+
+	switch runtime.GOOS {
+	case "linux":
+		if os.Getenv("WSL_DISTRO_NAME") != "" {
+			err = exec.Command("wslview", targetURL).Start()
+		} else {
+			err = exec.Command("xdg-open", targetURL).Start()
+		}
+	case "windows":
+		err = exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", targetURL).Start()
+	case "darwin":
+		err = exec.Command("open", targetURL).Start()
+	default:
+		err = fmt.Errorf("unsupported platform %v", runtime.GOOS)
+	}
+
+	return err
 }
