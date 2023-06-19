@@ -47,7 +47,7 @@ func (d languagesDelegate) Render(w io.Writer, m list.Model, index int, item lis
 }
 
 const (
-	languageListWidth = 25
+	languageListWidth = 30
 	newsListWidth     = 90
 )
 

@@ -115,8 +115,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "enter":
 			if m.tab == languageTab {
-				selectedLang := m.languageList.SelectedItem().(language)
-				return m, languageSelection(string(selectedLang))
+				selectedLang := string(m.languageList.SelectedItem().(language))
+
+				statusCmd := m.languageList.NewStatusMessage(ui.SuccessMessage.Render("Fetching news..."))
+				langCmd := languageSelection(selectedLang)
+
+				return m, tea.Batch(statusCmd, langCmd)
 			}
 
 			if m.tab == newsTab {
