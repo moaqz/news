@@ -51,18 +51,23 @@ const (
 	newsListWidth     = 90
 )
 
+var langListOptions = []list.Item{
+	language("Go"),
+	language("JavaScript"),
+	language("Node.js"),
+	language("Ruby"),
+	language("Databases"),
+	language("CSS"),
+}
+
 func NewLanguageList() list.Model {
-	l := list.New([]list.Item{}, languagesDelegate{}, languageListWidth, 0)
+	l := list.New(langListOptions, languagesDelegate{}, languageListWidth, 0)
 	l.Title = "Languages"
 
 	l.SetShowHelp(false)
 	l.SetFilteringEnabled(false)
 	l.SetShowStatusBar(false)
 	l.SetStatusBarItemName("language", "languages")
-	l.SetItems([]list.Item{
-		language("Go"),
-		language("JavaScript"),
-	})
 
 	return l
 }

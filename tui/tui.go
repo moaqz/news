@@ -188,7 +188,6 @@ func (m Model) View() string {
 
 // StartTea the entry point for the UI. Initializes the model.
 func StartTea() {
-	newsCache = make(map[string][]list.Item)
 	m := NewModel()
 
 	p := tea.NewProgram(m, tea.WithAltScreen())
