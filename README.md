@@ -7,6 +7,7 @@
 - [Bubbletea](https://github.com/charmbracelet/bubbletea)
 - [Bubbles](https://github.com/charmbracelet/bubbles)
 - [Lipgloss](https://github.com/charmbracelet/lipgloss)
+- [Colly](https://github.com/gocolly/colly)
 
 ## ⌨️ Key Bindings
 
@@ -26,7 +27,7 @@
 ## ✅ Todo
 
 - [x] Implement copy to clipboard functionality.
-- [ ] Add more languages to the list.
+- [x] Add more languages to the list.
 - [x] Open selected news in the browser.
 
 ## 📝 License
