@@ -3,13 +3,13 @@ module github.com/moaqz/news
 go 1.20
 
 require (
+	github.com/atotto/clipboard v0.1.4
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.7.1
 )
 
 require (
 	github.com/andybalholm/cascadia v1.3.1 // indirect
-	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/sahilm/fuzzy v0.1.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 )

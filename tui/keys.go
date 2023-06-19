@@ -11,6 +11,7 @@ type KeyMap struct {
 	MoveDown    key.Binding
 	NextTab     key.Binding
 	PreviousTab key.Binding
+	Copy        key.Binding
 }
 
 // DefaultKeyMap is the default key map for the application.
@@ -22,6 +23,7 @@ var DefaultKeyMap = KeyMap{
 	MoveDown:    key.NewBinding(key.WithKeys("k"), key.WithHelp("k", "move up")),
 	NextTab:     key.NewBinding(key.WithKeys("tab", "right"), key.WithHelp("tab", "navigate")),
 	PreviousTab: key.NewBinding(key.WithKeys("shift+tab", "left"), key.WithHelp("shift+tab", "navigate")),
+	Copy:        key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "copy news url")),
 }
 
 // ShortHelp returns a quick help menu.
@@ -29,6 +31,7 @@ func (k KeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{
 		k.Search,
 		k.NextTab,
+		k.Copy,
 		k.Quit,
 		k.ToggleHelp,
 	}

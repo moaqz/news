@@ -25,7 +25,7 @@
 
 ## ✅ Todo
 
-- [ ] Implement copy to clipboard functionality.
+- [X] Implement copy to clipboard functionality.
 - [ ] Add more languages to the list.
 - [ ] Open selected news in the browser.
 

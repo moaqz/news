@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/atotto/clipboard"
 	"github.com/moaqz/news/ui"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -53,7 +54,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.newsList.Title = msg.lang + " " + "News"
 
 	case tea.WindowSizeMsg:
-		m.height = msg.Height - 2
+		m.height = msg.Height - 3
 		m.width = msg.Width
 
 		m.newsList.SetHeight(m.height)
@@ -90,6 +91,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.languageList.SetHeight(newHeight)
 		case key.Matches(msg, m.keys.Search):
 			m.tab = newsTab
+
+		case key.Matches(msg, m.keys.Copy):
+			if m.tab == languageTab {
+				return m, nil
+			}
+
+			item := m.newsList.SelectedItem()
+			if item == nil {
+				return m, nil
+			}
+
+			url := item.(News).Url
+			if err := clipboard.WriteAll(url); err != nil {
+				return m, m.newsList.NewStatusMessage(ui.FailedMessage.Render("❌ Failed to copy to clipboard"))
+			}
+
+			return m, m.newsList.NewStatusMessage(ui.SuccessMessage.Render("🔗 Copied to clipboard!"))
 		}
 
 		switch msg.String() {
@@ -125,8 +143,6 @@ func (m *Model) updateActiveTab(msg tea.Msg) tea.Cmd {
 
 		m.newsList.Styles.Title = ui.FocusedTitle
 		m.newsList.Styles.TitleBar = ui.FocusedTitleBar.Width(newsListWidth)
-		m.newsList.FilterInput.PromptStyle = ui.Prompt
-		m.newsList.FilterInput.Cursor.Style = ui.Cursor
 
 		m.languageList.Styles.Title = ui.UnFocusedTitle
 		m.languageList.Styles.TitleBar = ui.UnFocusedTitleBar.Width(languageListWidth)

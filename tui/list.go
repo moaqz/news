@@ -112,11 +112,14 @@ func (d newsDelegate) Render(w io.Writer, m list.Model, index int, item list.Ite
 
 func NewNewsList() list.Model {
 	l := list.New([]list.Item{}, newsDelegate{}, newsListWidth, 0)
+
 	l.Title = "News"
 	l.SetShowHelp(false)
 	l.SetStatusBarItemName("news", "news")
 	l.Styles.NoItems = ui.NoItems
 	l.SetShowStatusBar(false)
+	l.FilterInput.PromptStyle = ui.Prompt
+	l.FilterInput.Cursor.Style = ui.Cursor
 
 	return l
 }
