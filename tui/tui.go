@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/moaqz/news/ui"
@@ -47,13 +46,11 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case updateNewsMsg:
-		if msg.err != nil {
-			log.Fatal(msg.err)
-		}
+	case languageSelectionMsg:
+		news := fetchNews(msg.lang)
 
-		m.newsList.Title = msg.lang + " News"
-		m.newsList.SetItems(msg.news)
+		m.newsList.SetItems(news)
+		m.newsList.Title = msg.lang + " " + "News"
 
 	case tea.WindowSizeMsg:
 		m.height = msg.Height - 2
@@ -99,7 +96,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			if m.tab == languageTab {
 				selectedLang := m.languageList.SelectedItem().(language)
-				return m, updateNews(string(selectedLang))
+				return m, languageSelection(string(selectedLang))
 			}
 
 			if m.tab == newsTab {
@@ -193,24 +190,12 @@ func (m *Model) PreviousTab() {
 	}
 }
 
-type updateNewsMsg struct {
+type languageSelectionMsg struct {
 	lang string
-	news []list.Item
-	err  error
 }
 
-func updateNews(lang string) tea.Cmd {
-	var msg updateNewsMsg
-
-	switch lang {
-	case "Go":
-		msg.news, msg.err = getGolangNews()
-
-	case "JavaScript":
-		msg.news, msg.err = getJavaScriptNews()
+func languageSelection(lang string) tea.Cmd {
+	return func() tea.Msg {
+		return languageSelectionMsg{lang: lang}
 	}
-
-	msg.lang = lang
-
-	return func() tea.Msg { return msg }
 }

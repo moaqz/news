@@ -1,13 +1,37 @@
 package tui
 
 import (
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/charmbracelet/bubbles/list"
 )
 
 var newsCache map[string][]list.Item
+
+func fetchNews(lang string) []list.Item {
+	var err error
+	var news []list.Item
+
+	switch lang {
+	case "Go":
+		news, err = getGolangNews()
+
+	case "JavaScript":
+		news, err = getJavaScriptNews()
+
+	default:
+		log.Fatal("Invalid language")
+	}
+
+	if err != nil {
+		os.Exit(1)
+	}
+
+	return news
+}
 
 func getNews(url string, selector string) ([]list.Item, error) {
 	// Check if the result is already in the cache
