@@ -1,0 +1,18 @@
+project_name: "news"
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - goos:
+      - linux
+      - darwin
+      - windows
+    goarm:
+      - "7"
+
+archives:
+  - format_overrides:
+      - goos: windows
+        format: zip
