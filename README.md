@@ -34,12 +34,6 @@ Or install it with go:
 $ go install github.com/moaqz/news@latest
 ```
 
-## ✅ Todo
-
-- [x] Implement copy to clipboard functionality.
-- [x] Add more languages to the list.
-- [x] Open selected news in the browser.
-
 ## 📝 License
 
 [MIT](https://github.com/moaqz/news/blob/master/LICENSE)
