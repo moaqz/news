@@ -11,18 +11,18 @@
 
 ## ⌨️ Key Bindings
 
-| Action                              | Key                            |
-| :---------------------------------- | :----------------------------- |
-| Copy selected news URL to clipboard | <kbd>c</kbd>                   |
-| Move down in a list                 | <kbd>j</kbd>                   |
-| Move up in a list                   | <kbd>k</kbd>                   |
-| Move to the top of a list           | <kbd>g</kbd>                   |
-| Move to the bottom of a list        | <kbd>G</kbd>                   |
-| Move to next tab                    | <kbd>tab</kbd>                 |
-| Move to previous tab                | <kbd>shift+tab</kbd>           |
-| Search / Filter news by title       | <kbd>/</kbd>                   |
-| Toggle help                         | <kbd>?</kbd>                   |
-| Quit application                    | <kbd>q</kbd> <kbd>ctrl+c</kbd> |
+| Action                        | Key                                  |
+| :---------------------------- | :----------------------------------- |
+| Copy url                      | <kbd>c</kbd>                         |
+| Move down in a list           | <kbd>j</kbd>                         |
+| Move up in a list             | <kbd>k</kbd>                         |
+| Go to end                     | <kbd>G</kbd> <kbd>end</kbd>          |
+| Go to start                   | <kbd>g</kbd> <kbd>home</kbd>         |
+| Move to next tab              | <kbd>tab</kbd> <kbd>right</kbd>      |
+| Move to previous tab          | <kbd>shift+tab</kbd> <kbd>left</kbd> |
+| Search / Filter news by title | <kbd>/</kbd>                         |
+| Toggle help                   | <kbd>?</kbd>                         |
+| Quit application              | <kbd>q</kbd> <kbd>ctrl+c</kbd>       |
 
 ## ⚡ Installation
 
