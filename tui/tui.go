@@ -82,15 +82,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.ToggleHelp):
 			m.help.ShowAll = !m.help.ShowAll
 
-			var newHeight int
-			if m.help.ShowAll {
-				newHeight = m.height - 3
-			} else {
-				newHeight = m.height
-			}
-
-			m.newsList.SetHeight(newHeight)
-			m.languageList.SetHeight(newHeight)
+			m.newsList.SetHeight(m.height)
+			m.languageList.SetHeight(m.height)
 		case key.Matches(msg, m.keys.Search):
 			m.tab = newsTab
 
@@ -137,8 +130,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	cmd := m.updateActiveTab(msg)
-	return m, cmd
+	m.updateKeyMap()
+	return m, m.updateActiveTab(msg)
 }
 
 // updateActiveTab updates the currently active tab.
@@ -223,6 +216,11 @@ func languageSelection(lang string) tea.Cmd {
 	return func() tea.Msg {
 		return languageSelectionMsg{lang: lang}
 	}
+}
+
+// updateKeyMap disables or enables the keys based on the current tab.
+func (m *Model) updateKeyMap() {
+	m.keys.Copy.SetEnabled(m.tab == newsTab && m.newsList.SelectedItem() != nil)
 }
 
 func openBrowser(targetURL string) error {
