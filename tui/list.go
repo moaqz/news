@@ -9,31 +9,26 @@ import (
 	"github.com/moaqz/news/ui"
 )
 
-/* LANGUAGE LIST  */
-type language string
+type technology string
 
-func (l language) FilterValue() string { return "" }
+func (l technology) FilterValue() string { return "" }
 
-type languagesDelegate struct{}
+type technologiesDelegate struct{}
 
-// Height is the number of lines the language list item takes up.
-func (d languagesDelegate) Height() int {
+func (d technologiesDelegate) Height() int {
 	return 1
 }
 
-// Spacing is the number of lines to insert between language items.
-func (d languagesDelegate) Spacing() int {
+func (d technologiesDelegate) Spacing() int {
 	return 0
 }
 
-// Update is what is called when the language selection is updated.
-func (d languagesDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
+func (d technologiesDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 	return nil
 }
 
-// Render renders a language list item.
-func (d languagesDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
-	l, ok := item.(language)
+func (d technologiesDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
+	l, ok := item.(technology)
 	if !ok {
 		return
 	}
@@ -47,32 +42,31 @@ func (d languagesDelegate) Render(w io.Writer, m list.Model, index int, item lis
 }
 
 const (
-	languageListWidth = 30
-	newsListWidth     = 90
+	technologyListWidth = 40
+	newsListWidth       = 90
 )
 
 var langListOptions = []list.Item{
-	language("Go"),
-	language("JavaScript"),
-	language("Node.js"),
-	language("Ruby"),
-	language("Databases"),
-	language("CSS"),
+	technology("Go"),
+	technology("JavaScript"),
+	technology("Node.js"),
+	technology("Ruby"),
+	technology("Databases"),
+	technology("CSS"),
 }
 
 func NewLanguageList() list.Model {
-	l := list.New(langListOptions, languagesDelegate{}, languageListWidth, 0)
-	l.Title = "Languages"
+	l := list.New(langListOptions, technologiesDelegate{}, technologyListWidth, 0)
+	l.Title = "Technologies"
 
 	l.SetShowHelp(false)
 	l.SetFilteringEnabled(false)
 	l.SetShowStatusBar(false)
-	l.SetStatusBarItemName("language", "languages")
+	l.SetStatusBarItemName("technology", "technologies")
 
 	return l
 }
 
-/* NEWS LIST */
 type News struct {
 	Title string
 	Url   string

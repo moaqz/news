@@ -27,7 +27,7 @@ func fetchNews(lang string) []list.Item {
 		news, err = getCssNews()
 
 	default:
-		log.Fatal("Invalid language")
+		log.Fatal("Invalid technology")
 	}
 
 	if err != nil {

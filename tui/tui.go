@@ -19,27 +19,27 @@ import (
 type tab int
 
 const (
-	languageTab tab = iota
+	technologyTab tab = iota
 	newsTab
 )
 
 type Model struct {
-	width        int
-	height       int
-	keys         KeyMap
-	help         help.Model
-	newsList     list.Model
-	languageList list.Model
-	quitting     bool
-	tab          tab
+	width          int
+	height         int
+	keys           KeyMap
+	help           help.Model
+	newsList       list.Model
+	technologyList list.Model
+	quitting       bool
+	tab            tab
 }
 
 func NewModel() Model {
 	return Model{
-		help:         help.New(),
-		keys:         DefaultKeyMap,
-		newsList:     NewNewsList(),
-		languageList: NewLanguageList(),
+		help:           help.New(),
+		keys:           DefaultKeyMap,
+		newsList:       NewNewsList(),
+		technologyList: NewLanguageList(),
 	}
 }
 
@@ -49,7 +49,7 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case languageSelectionMsg:
+	case technologySelectionMsg:
 		news := fetchNews(msg.lang)
 
 		m.newsList.SetItems(news)
@@ -60,7 +60,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 
 		m.newsList.SetHeight(m.height)
-		m.languageList.SetHeight(m.height)
+		m.technologyList.SetHeight(m.height)
 
 	case tea.KeyMsg:
 		switch {
@@ -83,12 +83,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.help.ShowAll = !m.help.ShowAll
 
 			m.newsList.SetHeight(m.height)
-			m.languageList.SetHeight(m.height)
+			m.technologyList.SetHeight(m.height)
 		case key.Matches(msg, m.keys.Search):
 			m.tab = newsTab
 
 		case key.Matches(msg, m.keys.Copy):
-			if m.tab == languageTab {
+			if m.tab == technologyTab {
 				return m, nil
 			}
 
@@ -107,11 +107,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch msg.String() {
 		case "enter":
-			if m.tab == languageTab {
-				selectedLang := string(m.languageList.SelectedItem().(language))
+			if m.tab == technologyTab {
+				selectedLang := string(m.technologyList.SelectedItem().(technology))
 
-				statusCmd := m.languageList.NewStatusMessage(ui.SuccessMessage.Render("Fetching news..."))
-				langCmd := languageSelection(selectedLang)
+				statusCmd := m.technologyList.NewStatusMessage(ui.SuccessMessage.Render("Fetching news..."))
+				langCmd := technologySelection(selectedLang)
 
 				return m, tea.Batch(statusCmd, langCmd)
 			}
@@ -147,16 +147,16 @@ func (m *Model) updateActiveTab(msg tea.Msg) tea.Cmd {
 		m.newsList.Styles.Title = ui.FocusedTitle
 		m.newsList.Styles.TitleBar = ui.FocusedTitleBar.Width(newsListWidth)
 
-		m.languageList.Styles.Title = ui.UnFocusedTitle
-		m.languageList.Styles.TitleBar = ui.UnFocusedTitleBar.Width(languageListWidth)
-	case languageTab:
-		m.languageList.Styles.Title = ui.FocusedTitle
-		m.languageList.Styles.TitleBar = ui.FocusedTitleBar.Width(languageListWidth)
+		m.technologyList.Styles.Title = ui.UnFocusedTitle
+		m.technologyList.Styles.TitleBar = ui.UnFocusedTitleBar.Width(technologyListWidth)
+	case technologyTab:
+		m.technologyList.Styles.Title = ui.FocusedTitle
+		m.technologyList.Styles.TitleBar = ui.FocusedTitleBar.Width(technologyListWidth)
 
 		m.newsList.Styles.Title = ui.UnFocusedTitle
 		m.newsList.Styles.TitleBar = ui.UnFocusedTitleBar.Width(newsListWidth)
 
-		m.languageList, cmd = m.languageList.Update(msg)
+		m.technologyList, cmd = m.technologyList.Update(msg)
 		cmds = append(cmds, cmd)
 	}
 
@@ -172,7 +172,7 @@ func (m Model) View() string {
 		lipgloss.Top,
 		lipgloss.JoinHorizontal(
 			lipgloss.Left,
-			m.languageList.View(),
+			m.technologyList.View(),
 			m.newsList.View(),
 		),
 		ui.Margin.Render(m.help.View(m.keys)),
@@ -208,13 +208,13 @@ func (m *Model) PreviousTab() {
 	}
 }
 
-type languageSelectionMsg struct {
+type technologySelectionMsg struct {
 	lang string
 }
 
-func languageSelection(lang string) tea.Cmd {
+func technologySelection(lang string) tea.Cmd {
 	return func() tea.Msg {
-		return languageSelectionMsg{lang: lang}
+		return technologySelectionMsg{lang: lang}
 	}
 }
 
